@@ -41,3 +41,49 @@ data class RoutineWithExercises(
     @Relation(entity = RoutineExercise::class, parentColumn = "id", entityColumn = "routineId")
     val exercises: List<ExerciseWithMachine>,
 )
+
+enum class SessionStatus { ACTIVE, PAUSED, COMPLETED }
+
+@Entity(tableName = "workout_sessions", indices = [Index(value = ["activeSlot"], unique = true)])
+data class WorkoutSession(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val routineId: Long,
+    val routineName: String,
+    val startedAt: Long,
+    val endedAt: Long? = null,
+    val status: SessionStatus = SessionStatus.ACTIVE,
+    val currentPosition: Int = 0,
+    // SQLite allows multiple NULLs in a unique index, but only one unfinished workout.
+    val activeSlot: Int? = 1,
+)
+
+@Entity(
+    tableName = "session_exercises",
+    foreignKeys = [ForeignKey(entity = WorkoutSession::class, parentColumns = ["id"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["sessionId", "position"], unique = true)],
+)
+data class SessionExercise(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val sessionId: Long,
+    val machineId: Long,
+    val machineName: String,
+    val notes: String,
+    val position: Int,
+    val targetSets: Int,
+    val targetReps: Int,
+)
+
+@Entity(
+    tableName = "set_records",
+    foreignKeys = [ForeignKey(entity = SessionExercise::class, parentColumns = ["id"], childColumns = ["sessionExerciseId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["sessionExerciseId", "sequence"], unique = true), Index(value = ["requestId"], unique = true)],
+)
+data class SetRecord(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val sessionExerciseId: Long,
+    val sequence: Int,
+    val weightKg: Double,
+    val reps: Int,
+    val completedAt: Long,
+    val requestId: String,
+)

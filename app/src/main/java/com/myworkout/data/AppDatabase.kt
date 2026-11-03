@@ -1,13 +1,20 @@
 package com.myworkout.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Machine::class, Routine::class, RoutineExercise::class], version = 1, exportSchema = true)
+@Database(
+    entities = [Machine::class, Routine::class, RoutineExercise::class, WorkoutSession::class, SessionExercise::class, SetRecord::class],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun workoutDao(): WorkoutDao
+    abstract fun workoutSessionDao(): WorkoutSessionDao
 
     companion object {
         @Volatile private var instance: AppDatabase? = null

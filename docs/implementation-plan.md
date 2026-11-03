@@ -70,11 +70,11 @@ Androidパッケージを `com.myworkout` とする。`data/` にRoom・DAO・�
 - `resumeActive(): ActiveWorkout?`：進行中のトレーニングを取得。
 - `finish(sessionId: Long)`：トレーニング終了。
 
-- [ ] 開始・保存・取り消し・終了・再起動後の再開・重複タップ防止を検証する単体テストを書く。「前回値の提示だけでは保存されない」ことも検証する。
-- [ ] `./gradlew testDebugUnitTest --tests '*SessionControllerTest'` で実装前の失敗を確認する。
-- [ ] Roomのトランザクションと1種目記録画面を実装する。重量は0以上、回数は1以上の整数で入力を検証する。
-- [ ] 単体テスト、エミュレーターでの `./gradlew connectedDebugAndroidTest`、ビルドを実行する。
-- [ ] `feat: persist workout sets and resume sessions` をコミットする。
+- [x] 開始・保存・取り消し・終了・再起動後の再開・重複タップ防止を検証する単体テストを書く。「前回値の提示だけでは保存されない」ことも検証する。
+- [x] `./gradlew testDebugUnitTest --tests '*SessionControllerTest'` で実装前の失敗を確認する。
+- [x] Roomのトランザクションと1種目記録画面を実装する。重量は0以上、回数は1以上の整数で入力を検証する。
+- [x] 単体テスト、エミュレーターでの `./gradlew connectedDebugAndroidTest`、ビルドを実行する。
+- [x] `feat: persist workout sets and resume sessions` をコミットする。
 
 **完了条件：** チェストプレスを記録後、アプリを終了・再起動しても続きから再開できる。
 
