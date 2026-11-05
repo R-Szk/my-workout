@@ -88,11 +88,11 @@ Androidパッケージを `com.myworkout` とする。`data/` にRoom・DAO・�
 - `skip(sessionExerciseId: Long)`
 - `add(sessionId: Long, machineId: Long): Long`
 
-- [ ] 順番変更、スキップ、種目追加、過去履歴を維持する動作のテストを書く。
-- [ ] `./gradlew testDebugUnitTest --tests '*SessionExerciseEditorTest'` で失敗を確認する。
-- [ ] 一覧を一時表示する操作メニューと、データベースの順番・状態変更を実装する。
-- [ ] 単体テストとUI操作テストを実行し、成功を確認する。
-- [ ] `feat: customize exercises during a workout` をコミットする。
+- [x] 順番変更、スキップ、種目追加、過去履歴を維持する動作のテストを書く。
+- [x] `./gradlew testDebugUnitTest --tests '*SessionExerciseEditorTest'` で失敗を確認する。
+- [x] 一覧を一時表示する操作メニューと、データベースの順番・状態変更を実装する。
+- [x] 単体テストとUI操作テストを実行し、成功を確認する。
+- [x] `feat: customize exercises during a workout` をコミットする。
 
 **完了条件：** 混雑時に種目順を変えたり、疲労時にスキップしたりできる。過去の記録は変わらない。
 

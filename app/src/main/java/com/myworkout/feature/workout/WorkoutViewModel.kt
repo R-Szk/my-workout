@@ -3,13 +3,16 @@ package com.myworkout.feature.workout
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.myworkout.data.Machine
 import com.myworkout.data.AppDatabase
 import com.myworkout.data.WorkoutRepository
 import com.myworkout.domain.ActiveWorkout
 import com.myworkout.domain.SessionController
+import com.myworkout.domain.SessionExerciseEditor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class WorkoutUiState(
@@ -19,18 +22,22 @@ data class WorkoutUiState(
     val showWorkout: Boolean = false,
     val error: String? = null,
     val message: String? = null,
+    val machines: List<Machine> = emptyList(),
 )
 
 class WorkoutViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getInstance(application)
     private val controller = SessionController(database)
+    private val editor = SessionExerciseEditor(database)
     private val mutableState = MutableStateFlow(WorkoutUiState())
     val state = mutableState.asStateFlow()
 
     init { reload() }
 
     fun reload() = perform {
-        WorkoutRepository(database).seedIfEmpty()
+        val repository = WorkoutRepository(database)
+        repository.seedIfEmpty()
+        mutableState.value = mutableState.value.copy(machines = repository.observeMachines().first())
     }
 
     fun start(routineId: Long) = perform {
@@ -52,6 +59,29 @@ class WorkoutViewModel(application: Application) : AndroidViewModel(application)
     fun move(delta: Int) = perform {
         val active = requireNotNull(mutableState.value.active)
         controller.moveTo(active.session.id, active.session.currentPosition + delta)
+    }
+
+    fun moveExercise(exerciseId: Long, delta: Int) = perform {
+        val active = requireNotNull(mutableState.value.active)
+        val ids = active.exercises.map { it.exercise.id }.toMutableList()
+        val from = ids.indexOf(exerciseId)
+        val to = from + delta
+        require(from in ids.indices && to in ids.indices)
+        val moved = ids.removeAt(from)
+        ids.add(to, moved)
+        editor.reorder(active.session.id, ids)
+    }
+
+    fun skip(exerciseId: Long) = perform { editor.skip(exerciseId) }
+    fun restore(exerciseId: Long) = perform { editor.restore(exerciseId) }
+    fun addMachine(machineId: Long) = perform {
+        editor.add(requireNotNull(mutableState.value.active).session.id, machineId)
+    }
+
+    fun selectExercise(exerciseId: Long) = perform {
+        val active = requireNotNull(mutableState.value.active)
+        val index = active.exercises.indexOfFirst { it.exercise.id == exerciseId }
+        controller.moveTo(active.session.id, index)
     }
 
     fun completeSet(exerciseId: Long, weight: String, reps: String, requestId: String) {

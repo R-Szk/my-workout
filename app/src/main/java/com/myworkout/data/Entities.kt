@@ -43,6 +43,7 @@ data class RoutineWithExercises(
 )
 
 enum class SessionStatus { ACTIVE, PAUSED, COMPLETED }
+enum class ExerciseStatus { PENDING, SKIPPED }
 
 @Entity(tableName = "workout_sessions", indices = [Index(value = ["activeSlot"], unique = true)])
 data class WorkoutSession(
@@ -71,6 +72,7 @@ data class SessionExercise(
     val position: Int,
     val targetSets: Int,
     val targetReps: Int,
+    @ColumnInfo(defaultValue = "'PENDING'") val status: ExerciseStatus = ExerciseStatus.PENDING,
 )
 
 @Entity(

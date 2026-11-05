@@ -36,6 +36,7 @@ class SessionController(private val database: AppDatabase) {
         require(requestId.isNotBlank())
         val exercise = requireNotNull(dao.exercise(sessionExerciseId)) { "種目が見つかりません。" }
         requireActive(exercise.sessionId)
+        require(exercise.status != ExerciseStatus.SKIPPED) { "スキップを解除してから記録してください。" }
         dao.recordForRequest(requestId)?.let { existing ->
             require(existing.sessionExerciseId == sessionExerciseId && existing.weightKg == weightKg && existing.reps == reps) { "保存要求が一致しません。" }
             return@withTransaction existing.id
