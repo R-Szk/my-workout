@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local-only equipment/muscle artwork; redistribution permission is unconfirmed.
+/design-assets/machines/
+/design-assets/muscles/

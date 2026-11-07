@@ -29,22 +29,10 @@ class SessionExerciseFlowTest {
 
     @Test fun reorderSkipAddRestoreAndResumeQueue() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        fun click(selector: BySelector) {
-            val target = device.wait(Until.findObject(selector), 10_000)
-            assertNotNull("Missing: $selector", target)
-            target.click()
-            device.waitForIdle()
-        }
-        fun clickText(text: String) = click(By.text(text))
-        fun visible(text: String) {
-            if (!device.wait(Until.hasObject(By.text(text)), 5_000)) {
-                device.executeShellCommand("screencap -p /sdcard/myworkout-stage3-failure.png")
-                val hierarchy = ByteArrayOutputStream()
-                device.dumpWindowHierarchy(hierarchy)
-                Log.e("Stage3Ui", hierarchy.toString())
-                fail("Missing: $text")
-            }
-        }
+        val actions=UiActions(device)
+        fun click(selector:BySelector) = actions.click(selector)
+        fun clickText(text:String) = actions.click(text)
+        fun visible(text:String) = actions.visible(text)
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             clickText("トレーニング開始")
             visible("チェストプレス")

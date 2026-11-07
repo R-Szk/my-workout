@@ -1,3 +1,9 @@
 <resources>
-    <style name="Theme.MyWorkout" parent="android:style/Theme.Material.Light.NoActionBar" />
+    <style name="Theme.MyWorkout" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#090F1D</item>
+        <item name="android:windowSplashScreenBackground">#090F1D</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:colorAccent">#34D399</item>
+    </style>
 </resources>

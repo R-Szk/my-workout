@@ -31,6 +31,10 @@ android {
             )
         }
     }
+    // Optional local artwork is packaged for this device, never copied into version control.
+    if (!providers.gradleProperty("withoutLocalArt").isPresent) {
+        sourceSets.getByName("main").assets.srcDir(rootProject.file("design-assets"))
+    }
     sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = true }

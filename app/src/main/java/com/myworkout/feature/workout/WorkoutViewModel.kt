@@ -1,6 +1,8 @@
 package com.myworkout.feature.workout
 
 import android.app.Application
+import androidx.lifecycle.SavedStateHandle
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.myworkout.data.Machine
@@ -23,13 +25,15 @@ data class WorkoutUiState(
     val error: String? = null,
     val message: String? = null,
     val machines: List<Machine> = emptyList(),
+    val summaryId: Long? = null,
 )
 
-class WorkoutViewModel(application: Application) : AndroidViewModel(application) {
+class WorkoutViewModel(application: Application, private val savedState: SavedStateHandle) : AndroidViewModel(application) {
     private val database = AppDatabase.getInstance(application)
     private val controller = SessionController(database)
     private val editor = SessionExerciseEditor(database)
-    private val mutableState = MutableStateFlow(WorkoutUiState())
+    private val mutableState = MutableStateFlow(WorkoutUiState(summaryId = savedState["summaryId"]))
+    private var lastSaveIntent = -1000L
     val state = mutableState.asStateFlow()
 
     init { reload() }
@@ -84,6 +88,10 @@ class WorkoutViewModel(application: Application) : AndroidViewModel(application)
         controller.moveTo(active.session.id, index)
     }
 
+    fun chooseVisual(exerciseId: Long, key: String) = perform { controller.chooseVisual(exerciseId, key) }
+    fun showSummary(id: Long) { savedState["summaryId"] = id; mutableState.value = mutableState.value.copy(summaryId = id) }
+    fun closeSummary() { savedState["summaryId"] = null; mutableState.value = mutableState.value.copy(summaryId = null) }
+
     fun completeSet(exerciseId: Long, weight: String, reps: String, requestId: String) {
         if (mutableState.value.busy) return
         val parsedWeight = weight.trim().replace(',', '.').toDoubleOrNull()
@@ -92,14 +100,19 @@ class WorkoutViewModel(application: Application) : AndroidViewModel(application)
             mutableState.value = mutableState.value.copy(error = "重量は0以上の数値、回数は1以上の整数を入力してください。")
             return
         }
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastSaveIntent < 600) return
+        lastSaveIntent = now
         perform { controller.completeSet(exerciseId, parsedWeight, parsedReps, requestId) }
     }
 
     fun undo(setId: Long) = perform { controller.undoSet(setId) }
 
     fun finish() = perform {
-        controller.finish(requireNotNull(mutableState.value.active).session.id)
-        mutableState.value = mutableState.value.copy(showWorkout = false, message = "トレーニングを保存して終了しました。")
+        val id = requireNotNull(mutableState.value.active).session.id
+        controller.finish(id)
+        savedState["summaryId"] = id
+        mutableState.value = mutableState.value.copy(showWorkout = false, active = null, summaryId = id, message = "トレーニングを保存して終了しました。")
     }
 
     private fun perform(action: suspend () -> Unit) {

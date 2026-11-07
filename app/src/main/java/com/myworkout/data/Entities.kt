@@ -8,6 +8,7 @@ data class Machine(
     val name: String,
     val imageAsset: String? = null,
     val notes: String = "",
+    val visualKey: String? = null,
 )
 
 @Entity(tableName = "routines")
@@ -73,6 +74,7 @@ data class SessionExercise(
     val targetSets: Int,
     val targetReps: Int,
     @ColumnInfo(defaultValue = "'PENDING'") val status: ExerciseStatus = ExerciseStatus.PENDING,
+    val visualKey: String? = null,
 )
 
 @Entity(
@@ -88,4 +90,14 @@ data class SetRecord(
     val reps: Int,
     val completedAt: Long,
     val requestId: String,
+)
+
+data class ExerciseHistory(
+    @Embedded val exercise: SessionExercise,
+    @Relation(parentColumn = "id", entityColumn = "sessionExerciseId") val sets: List<SetRecord>,
+)
+data class WorkoutHistory(
+    @Embedded val session: WorkoutSession,
+    @Relation(entity = SessionExercise::class, parentColumn = "id", entityColumn = "sessionId")
+    val exercises: List<ExerciseHistory>,
 )

@@ -1,6 +1,7 @@
 package com.myworkout.data
 
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WorkoutSessionDao {
@@ -31,6 +32,17 @@ interface WorkoutSessionDao {
         WHERE e.machineId = :machineId AND s.status = 'COMPLETED' AND e.status <> 'SKIPPED'
         ORDER BY s.endedAt DESC, s.id DESC, r.completedAt DESC, r.id DESC LIMIT 1""")
     suspend fun previousRecord(machineId: Long): SetRecord?
+
+    @Transaction
+    @Query("SELECT * FROM workout_sessions WHERE status = 'COMPLETED' ORDER BY startedAt DESC, id DESC")
+    fun observeHistory(): Flow<List<WorkoutHistory>>
+
+    @Transaction
+    @Query("SELECT * FROM workout_sessions WHERE id = :id")
+    suspend fun history(id: Long): WorkoutHistory?
+
+    @Query("UPDATE machines SET visualKey = :visualKey WHERE id = :id")
+    suspend fun updateMachineVisual(id: Long, visualKey: String)
 
     @Insert suspend fun insertSession(session: WorkoutSession): Long
     @Insert suspend fun insertExercises(exercises: List<SessionExercise>)

@@ -9,6 +9,7 @@ data class ActiveExercise(
     val exercise: SessionExercise,
     val sets: List<SetRecord>,
     val previous: SetRecord?,
+    val previousSets: List<SetRecord> = emptyList(),
 )
 
 data class ActiveWorkout(val session: WorkoutSession, val exercises: List<ActiveExercise>)
@@ -23,7 +24,8 @@ class SessionController(private val database: AppDatabase) {
         val id = dao.insertSession(WorkoutSession(routineId = routineId, routineName = routine.routine.name, startedAt = System.currentTimeMillis()))
         dao.insertExercises(routine.exercises.sortedBy { it.exercise.position }.mapIndexed { index, item ->
             SessionExercise(sessionId = id, machineId = item.machine.id, machineName = item.machine.name,
-                notes = item.machine.notes, position = index, targetSets = item.exercise.targetSets, targetReps = item.exercise.targetReps)
+                notes = item.machine.notes, position = index, targetSets = item.exercise.targetSets, targetReps = item.exercise.targetReps,
+                visualKey = item.machine.visualKey ?: VisualCatalog.defaultForMachine(item.machine.id)?.key)
         })
         id
     }
@@ -36,12 +38,15 @@ class SessionController(private val database: AppDatabase) {
         require(requestId.isNotBlank())
         val exercise = requireNotNull(dao.exercise(sessionExerciseId)) { "種目が見つかりません。" }
         requireActive(exercise.sessionId)
+        val existingRecords = dao.records(sessionExerciseId)
+        val legacyUnclassified = exercise.visualKey == null && existingRecords.isNotEmpty()
+        require(VisualCatalog.options(exercise.machineId).isEmpty() || VisualCatalog.resolve(exercise) != null || legacyUnclassified) { "機種・種目を選択してから記録してください。" }
         require(exercise.status != ExerciseStatus.SKIPPED) { "スキップを解除してから記録してください。" }
         dao.recordForRequest(requestId)?.let { existing ->
             require(existing.sessionExerciseId == sessionExerciseId && existing.weightKg == weightKg && existing.reps == reps) { "保存要求が一致しません。" }
             return@withTransaction existing.id
         }
-        val sequence = (dao.records(sessionExerciseId).lastOrNull()?.sequence ?: 0) + 1
+        val sequence = (existingRecords.lastOrNull()?.sequence ?: 0) + 1
         dao.insertRecord(SetRecord(sessionExerciseId = sessionExerciseId, sequence = sequence, weightKg = weightKg,
             reps = reps, completedAt = System.currentTimeMillis(), requestId = requestId))
     }
@@ -55,9 +60,21 @@ class SessionController(private val database: AppDatabase) {
 
     suspend fun resumeActive(): ActiveWorkout? = database.withTransaction {
         val session = dao.unfinished() ?: return@withTransaction null
+        val repository = WorkoutHistoryRepository(database)
+        val history = repository.observeHistory().first()
         ActiveWorkout(session, dao.exercises(session.id).map { exercise ->
-            ActiveExercise(exercise, dao.records(exercise.id), dao.previousRecord(exercise.machineId))
+            val previous = repository.previousSets(exercise, history)
+            ActiveExercise(exercise, dao.records(exercise.id), previous.lastOrNull(), previous)
         })
+    }
+
+    suspend fun chooseVisual(exerciseId: Long, key: String) = database.withTransaction {
+        val exercise = requireNotNull(dao.exercise(exerciseId))
+        requireActive(exercise.sessionId)
+        require(dao.records(exerciseId).isEmpty()) { "記録済みの種目は変更できません。" }
+        require(VisualCatalog.options(exercise.machineId).any { it.key == key }) { "対応していない機種・種目です。" }
+        dao.updateExercise(exercise.copy(visualKey = key))
+        dao.updateMachineVisual(exercise.machineId, key)
     }
 
     suspend fun moveTo(sessionId: Long, position: Int) = database.withTransaction {
