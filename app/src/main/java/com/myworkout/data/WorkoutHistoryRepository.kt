@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.map
 
 class WorkoutHistoryRepository(database: AppDatabase) {
     private val dao = database.workoutSessionDao()
+    suspend fun deleteCompleted(id: Long): Boolean = dao.deleteCompletedSession(id) > 0
+
     fun observeHistory(): Flow<List<WorkoutHistory>> = dao.observeHistory().map { sessions ->
         sessions.map { it.copy(exercises = it.exercises.sortedBy { e -> e.exercise.position }.map { e -> e.copy(sets = e.sets.sortedBy { s -> s.sequence }) }) }
     }

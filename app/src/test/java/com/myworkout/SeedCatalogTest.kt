@@ -42,12 +42,12 @@ class SeedCatalogTest {
     @Test fun seedingTwiceAndReopeningPreservesCatalogAndEdits() = runBlocking {
         val name = "seed-test.db"
         context.deleteDatabase(name)
-        var db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+        var db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
         try {
             WorkoutRepository(db).seedIfEmpty()
             db.openHelper.writableDatabase.execSQL("UPDATE machines SET name = '自分のマシン' WHERE id = 1")
             db.close()
-            db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+            db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
             val repository = WorkoutRepository(db)
             repository.seedIfEmpty()
             assertEquals(9, repository.observeMachines().first().size)

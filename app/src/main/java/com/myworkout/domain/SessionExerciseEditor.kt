@@ -51,6 +51,7 @@ class SessionExerciseEditor(private val database: AppDatabase) {
             sessionId = sessionId, machineId = machine.id, machineName = machine.name, notes = machine.notes,
             position = exercises.size, targetSets = target?.targetSets ?: 2, targetReps = target?.targetReps ?: 10,
             visualKey = machine.visualKey ?: VisualCatalog.defaultForMachine(machine.id)?.key,
+            loadType = VisualCatalog.find(machine.visualKey ?: VisualCatalog.defaultForMachine(machine.id)?.key)?.loadType,
         ))
         if (exercises.all { it.status == ExerciseStatus.SKIPPED }) {
             dao.updateSession(session.copy(currentPosition = exercises.size))

@@ -23,17 +23,20 @@ class WorkoutDesignTest {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val actions=UiActions(device)
         fun click(text:String) = actions.click(text)
+        LegacyUiFixture.ensure()
         ActivityScenario.launch(MainActivity::class.java).use {
+            click("マシントレーニング")
             click("トレーニング開始")
             assertNotNull(device.wait(Until.findObject(By.descStartsWith("マシン画像")),10_000))
             created=runBlocking { SessionController(AppDatabase.getInstance(InstrumentationRegistry.getInstrumentation().targetContext)).resumeActive()!!.session.id }
             assertTrue(device.hasObject(By.descContains("筋肉図")))
             actions.click(By.desc("重量を増やす"))
             actions.click(By.desc("回数を増やす"))
-            val save = device.findObject(By.text("セット完了")).visibleCenter
+            val save = device.findObject(By.text("1セット完了")).visibleCenter
             assertTrue(device.click(save.x,save.y))
             assertTrue(device.click(save.x,save.y))
             actions.visible("記録済み：1セット")
+            actions.visible("2セット完了")
             val count=runBlocking { SessionController(AppDatabase.getInstance(InstrumentationRegistry.getInstrumentation().targetContext)).resumeActive()!!.exercises.first().sets.size }
             assertEquals("Rapid save count",1,count)
             actions.visible("記録済み：1セット")

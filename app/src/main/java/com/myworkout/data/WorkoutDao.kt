@@ -5,6 +5,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WorkoutDao {
+    @Transaction
+    @Query("SELECT * FROM routines ORDER BY id")
+    fun observeRoutines(): Flow<List<RoutineWithExercises>>
+
     @Query("SELECT * FROM machines ORDER BY id")
     fun observeMachines(): Flow<List<Machine>>
 

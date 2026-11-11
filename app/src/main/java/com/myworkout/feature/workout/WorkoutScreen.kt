@@ -21,15 +21,19 @@ fun WorkoutScreen(state: WorkoutUiState, model: WorkoutViewModel) {
     val active = state.active ?: return
     val current = active.exercises[active.session.currentPosition]
     val exercise = current.exercise
+    val stepImages = ExerciseSteps.find(exercise.visualKey)
     val profile = VisualCatalog.resolve(exercise)
+    val bodyweight = VisualCatalog.loadTypeFor(exercise) == LoadType.BODYWEIGHT
     val options = VisualCatalog.options(exercise.machineId)
     val skipped = exercise.status == ExerciseStatus.SKIPPED
     val selectable = options.size > 1 && current.sets.isEmpty()
     val canSave = !state.busy && !skipped && (profile != null || options.isEmpty() || (exercise.visualKey == null && current.sets.isNotEmpty()))
+    val saveLabel = if (state.busy) "処理中…" else "${current.sets.size + 1}セット完了"
     val initial = current.sets.lastOrNull() ?: current.previous
     var weight by rememberSaveable(exercise.id, exercise.visualKey) { mutableStateOf(initial?.weightKg?.toString() ?: "0") }
     var reps by rememberSaveable(exercise.id, exercise.visualKey) { mutableStateOf((initial?.reps ?: exercise.targetReps).toString()) }
     val requestId = rememberSaveable(exercise.id, exercise.visualKey, current.sets.lastOrNull()?.id, current.sets.size) { UUID.randomUUID().toString() }
+    var editingSetId by rememberSaveable(exercise.id) { mutableStateOf<Long?>(null) }
     var showQueue by rememberSaveable { mutableStateOf(false) }
     var showChoice by rememberSaveable { mutableStateOf(false) }
     var showPrevious by remember { mutableStateOf(false) }
@@ -61,13 +65,12 @@ fun WorkoutScreen(state: WorkoutUiState, model: WorkoutViewModel) {
             LinearProgressIndicator(progress = { (active.session.currentPosition+1).toFloat()/active.exercises.size }, modifier = Modifier.fillMaxWidth().height(3.dp))
             }
             Row(Modifier.fillMaxWidth().height(heroHeight), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MachinePhoto(profile?.machineImage, exercise.machineName, Modifier.weight(1f).fillMaxHeight())
-                MuscleMap(profile, Modifier.weight(1f).fillMaxHeight())
+                if (stepImages != null) ExerciseStepImages(stepImages, Modifier.weight(2.5f).fillMaxHeight())
+                else MachinePhoto(profile?.machineImage, exercise.machineName, Modifier.weight(1f).fillMaxHeight())
+                if (stepImages != null) Card(Modifier.weight(1f).fillMaxHeight()) {
+                    BodyMap(stepImages.muscles.associateWith { MuscleRole.PRIMARY }, Modifier.fillMaxSize(), primaryColor = androidx.compose.ui.graphics.Color(0xFF2DD4BF))
+                } else MuscleMap(profile, Modifier.weight(1f).fillMaxHeight())
             }
-            if (!compact) Text(
-                "メイン：" + (profile?.primary?.joinToString("・") { it.label } ?: "種目を選択してください"),
-                style = MaterialTheme.typography.labelMedium, color = com.myworkout.ui.theme.MainMuscleColor,
-            )
             Column(Modifier.weight(1f).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if(tiny) TextButton(onClick={keyboard?.hide();focus.clearFocus();showQueue=true},enabled=!state.busy) { Text("当日の種目を編集") }
                 if (options.size > 1) Card(Modifier.fillMaxWidth()) {
@@ -84,19 +87,19 @@ fun WorkoutScreen(state: WorkoutUiState, model: WorkoutViewModel) {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("前回の記録", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(current.previous?.let { "最終セット ${it.weightKg} kg × ${it.reps}回 · 計${current.previousSets.size}セット" } ?: "前回の記録はありません。", style = MaterialTheme.typography.bodyMedium)
+                        Text(current.previous?.let { "最終セット ${it.displayText()} · 計${current.previousSets.size}セット" } ?: "前回の記録はありません。", style = MaterialTheme.typography.bodyMedium)
                         if (current.previousSets.isNotEmpty()) TextButton(onClick = { showPrevious = true }) { Text("前回のセットを見る") }
                     }
                 }
                 if (exercise.notes.isNotBlank()) Text(exercise.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    QuantityStepper(weight, { weight = it }, true, !state.busy && !skipped, Modifier.weight(1f), profile?.loadType == LoadType.ASSISTANCE)
+                    if (!bodyweight) QuantityStepper(weight, { weight = it }, true, !state.busy && !skipped, Modifier.weight(1f), profile?.loadType == LoadType.ASSISTANCE)
                     QuantityStepper(reps, { reps = it }, false, !state.busy && !skipped, Modifier.weight(1f))
                 }
+                if (stepImages != null && !bodyweight) Text("重量はダンベル1個分です。", style = MaterialTheme.typography.labelSmall)
                 if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error)
                 Text("目標：${exercise.targetReps}回 × ${exercise.targetSets}セット", style = MaterialTheme.typography.labelLarge)
-                SetList(current.sets, exercise.targetSets, !state.busy, model::undo)
-                Text("前回値は提案です。未完了セットは保存されません。訂正は取り消して再入力できます。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                SetList(current.sets, exercise.targetSets, !state.busy, model::undo, onEdit = { model.clearError(); editingSetId = it })
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     OutlinedButton(onClick = { model.move(-1) }, enabled = !state.busy && active.session.currentPosition>0) { Text("前の種目") }
                     OutlinedButton(onClick = { model.move(1) }, enabled = !state.busy && active.session.currentPosition<active.exercises.lastIndex) { Text("次の種目") }
@@ -105,12 +108,22 @@ fun WorkoutScreen(state: WorkoutUiState, model: WorkoutViewModel) {
                 TextButton(onClick = { confirmFinish = true }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("トレーニングを終了") }
                 Spacer(Modifier.height(8.dp))
             }
+            key(exercise.id, current.sets.size, state.busy) {
             Surface(color = MaterialTheme.colorScheme.background) {
                 Button(onClick = { keyboard?.hide();focus.clearFocus();model.completeSet(exercise.id,weight,reps,requestId) }, enabled = canSave, modifier = Modifier.fillMaxWidth().padding(vertical = if(tiny) 4.dp else 8.dp).heightIn(min = 56.dp)) {
-                    Text(if (state.busy) "処理中…" else "セット完了", style = MaterialTheme.typography.titleMedium)
+                    Text(saveLabel, style = MaterialTheme.typography.titleMedium)
                 }
             }
+            }
         }
+    }
+    current.sets.firstOrNull { it.id == editingSetId }?.let { record ->
+        SetEditDialog(record, current.sets.indexOf(record) + 1, state.busy, state.error, bodyweight = bodyweight,
+            onDismiss = { model.clearError(); editingSetId = null },
+            onSave = { weightValue, repsValue ->
+                keyboard?.hide(); focus.clearFocus()
+                model.updateSet(record.id, weightValue, repsValue) { editingSetId = null }
+            })
     }
     if (showQueue) ExerciseQueueSheet(state,model,onDismiss = { showQueue = false })
     if (showChoice) AlertDialog(
@@ -120,12 +133,12 @@ fun WorkoutScreen(state: WorkoutUiState, model: WorkoutViewModel) {
     )
     if (showPrevious) AlertDialog(
         onDismissRequest = { showPrevious = false }, title = { Text("前回の全セット") },
-        text = { Column(Modifier.verticalScroll(rememberScrollState())) { current.previousSets.forEachIndexed { index,s -> Text("${index+1}. ${s.weightKg} kg × ${s.reps}回") } } },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) { current.previousSets.forEachIndexed { index,s -> Text("${index+1}. ${s.displayText()}") } } },
         confirmButton = { TextButton(onClick = { showPrevious = false }) { Text("閉じる") } },
     )
     if (confirmFinish) AlertDialog(
         onDismissRequest = { confirmFinish = false }, title = { Text("トレーニングを終了しますか？") },
-        text = { Text("完了したセットを保存して終了します。未実施のセットは記録されません。") },
+        text = { Text("完了したセットを保存して終了します。セットが0件の場合は記録を残しません。") },
         confirmButton = { TextButton(onClick = { confirmFinish = false;model.finish() }) { Text("終了する") } },
         dismissButton = { TextButton(onClick = { confirmFinish = false }) { Text("続ける") } },
     )

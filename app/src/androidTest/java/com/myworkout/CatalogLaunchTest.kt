@@ -15,9 +15,9 @@ class CatalogLaunchTest {
     @Test fun launchShowsBothMenusFromLocalDatabase() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         ActivityScenario.launch(MainActivity::class.java).use {
-            assertTrue(device.wait(Until.hasObject(By.text("A：胸・肩・背中")), 10_000))
-            device.findObject(By.text("B：胸・背中・腕・脚")).click()
-            assertTrue(device.wait(Until.hasObject(By.textContains("バーティカルインクラインベンチプレス")), 5_000))
+            assertTrue(device.wait(Until.hasObject(By.text("A：胸・肩・二の腕")), 10_000))
+            device.findObject(By.text("B：背中・力こぶ・下半身")).click()
+            assertTrue(device.wait(Until.hasObject(By.textContains("ワンハンド・ダンベルロー")), 5_000))
         }
     }
 }

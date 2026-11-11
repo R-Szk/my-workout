@@ -31,10 +31,10 @@ fun WorkoutSummaryScreen(summary: WorkoutSummary, onHome: () -> Unit) {
             item { Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 Metric("実施種目","${summary.exerciseCount}種目","実施種目数：${summary.exerciseCount}",Modifier.weight(1f))
                 Metric("完了セット","${summary.setCount}セット","完了セット数：${summary.setCount}",Modifier.weight(1f))
-                val seconds=summary.durationMillis/1000
-                Metric("経過時間",if(seconds<60) "${seconds}秒" else "${seconds/60}分${seconds%60}秒","経過時間：${seconds}秒",Modifier.weight(1f))
+                val seconds=summary.durationMillis?.div(1000)
+                Metric("経過時間",if(seconds==null) "未計測" else if(seconds<60) "${seconds}秒" else "${seconds/60}分${seconds%60}秒",if(seconds==null) "経過時間：未計測" else "経過時間：${seconds}秒",Modifier.weight(1f))
             } }
-            item { Text("時間は開始から終了まで（中断を含む）。",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { Text(if(summary.durationMillis==null) "旧記録は中断時間を確認できないため、経過時間は未計測です。" else "経過時間に中断中の時間は含みません。",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant) }
             item { Text("記録の変化",style=MaterialTheme.typography.titleLarge) }
             if(summary.progress.isEmpty()) item { Text(if(summary.setCount==0) "完了したセットはありません。" else "種目未分類のため比較できません。") }
             else item { Card(Modifier.fillMaxWidth()) {
@@ -46,8 +46,10 @@ fun WorkoutSummaryScreen(summary: WorkoutSummary, onHome: () -> Unit) {
                     }
                     val progress=summary.progress[selected.coerceIn(summary.progress.indices)]
                     Text(progress.name,style=MaterialTheme.typography.titleMedium)
-                    Text("今回 ${if(progress.loadType==LoadType.ASSISTANCE) "補助 " else ""}${progress.currentWeightKg} kg × ${progress.currentReps}回",style=MaterialTheme.typography.titleLarge)
-                    if(progress.weightChange==null) Text("前回の比較記録はありません。",color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    val bodyweight = progress.loadType==LoadType.BODYWEIGHT
+                    Text(if(bodyweight) "今回 ${progress.currentReps}回" else "今回 ${if(progress.loadType==LoadType.ASSISTANCE) "補助 " else ""}${progress.currentWeightKg} kg × ${progress.currentReps}回",style=MaterialTheme.typography.titleLarge)
+                    if(bodyweight && progress.repetitionChange!=null) Text("回数：${if(progress.repetitionChange>0) "+" else ""}${progress.repetitionChange} 回",color=MaterialTheme.colorScheme.primary)
+                    else if(progress.weightChange==null) Text("前回の比較記録はありません。",color=MaterialTheme.colorScheme.onSurfaceVariant)
                     else {
                         val change=progress.weightChange
                         Text("${if(progress.loadType==LoadType.ASSISTANCE) "補助重量" else "重量"}：${if(change>0) "+" else ""}$change kg",color=MaterialTheme.colorScheme.primary)

@@ -22,7 +22,7 @@ class WorkoutPersistenceTest {
     @Test fun reopenRestoresSavedSetsPositionAndPauseWithoutDuplicate() = runBlocking {
         val name = "workout-persistence-test.db"
         context.deleteDatabase(name)
-        var db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+        var db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
         try {
             WorkoutRepository(db).seedIfEmpty()
             val controller = SessionController(db)
@@ -32,20 +32,20 @@ class WorkoutPersistenceTest {
             controller.moveTo(sessionId, 1)
             controller.pause(sessionId)
             db.close()
-            db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+            db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
             val restored = SessionController(db)
             val workout = restored.resumeActive()!!
             assertEquals(sessionId, workout.session.id)
             assertEquals(SessionStatus.PAUSED, workout.session.status)
             assertEquals(1, workout.session.currentPosition)
             assertEquals(setId, workout.exercises.first().sets.single().id)
-            assertEquals(32.5, workout.exercises.first().sets.single().weightKg, 0.0)
+            assertEquals(32.5, workout.exercises.first().sets.single().weightKg!!, 0.0)
             restored.resume(sessionId)
             assertEquals(setId, restored.completeSet(exerciseId, 32.5, 9, "persistent-intent"))
             assertEquals(1, restored.resumeActive()!!.exercises.first().sets.size)
             restored.finish(sessionId)
             db.close()
-            db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+            db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
             assertNull(SessionController(db).resumeActive())
             assertEquals(1, db.workoutSessionDao().records(exerciseId).size)
         } finally { db.close(); context.deleteDatabase(name) }
@@ -72,7 +72,7 @@ class WorkoutPersistenceTest {
             old.execSQL("INSERT INTO routine_exercises VALUES (1, 1, 0, 2, 8)")
             old.version = 1
         }
-        val db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+        val db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
         try {
             WorkoutRepository(db).seedIfEmpty()
             val routine = WorkoutRepository(db).observeRoutine(1).first()!!

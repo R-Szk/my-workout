@@ -9,7 +9,7 @@ class ProgressCalculatorTest {
     private val zone = ZoneId.of("Asia/Tokyo")
     private fun workout(id: Long, date: String, weights: List<Pair<Double, Int>>, machine: Long = 1, key: String? = "chest_press"): WorkoutHistory {
         val start = LocalDate.parse(date).atStartOfDay(zone).toInstant().toEpochMilli()
-        return WorkoutHistory(WorkoutSession(id, 1, "A", start, start + 120000, SessionStatus.COMPLETED, 0, null),
+        return WorkoutHistory(WorkoutSession(id, 1, "A", start, start + 120000, SessionStatus.COMPLETED, 0, null, activeDurationMillis = 120000L),
             listOf(ExerciseHistory(SessionExercise(id, id, machine, "種目", "", 0, 3, 10, visualKey = key),
                 weights.mapIndexed { i, pair -> SetRecord(id * 10 + i, id, i + 1, pair.first, pair.second, start + i, "$id-$i") })))
     }
@@ -41,7 +41,7 @@ class ProgressCalculatorTest {
         val result = ProgressCalculator.summary(now, listOf(old, now, other), zone).progress.single()
         assertEquals(-10.0, result.weightChange!!, 0.0)
         assertEquals(LoadType.ASSISTANCE, result.loadType)
-        assertEquals(30.0, result.points.last().weightKg, 0.0)
+        assertEquals(30.0, result.points.last().weightKg!!, 0.0)
         assertNull(ProgressCalculator.summary(other, listOf(old, now, other), zone).progress.single().weightChange)
     }
     @Test fun sameWeightGraphKeepsSetsHiddenByHeavierDailyBest() {

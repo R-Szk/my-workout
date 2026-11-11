@@ -3,14 +3,14 @@ package com.myworkout.domain
 import com.myworkout.data.*
 import java.time.*
 
-data class PerformancePoint(val date: LocalDate, val weightKg: Double, val reps: Int)
+data class PerformancePoint(val date: LocalDate, val weightKg: Double?, val reps: Int)
 data class ExerciseProgress(
     val key: String, val name: String, val loadType: LoadType, val points: List<PerformancePoint>,
     val weightChange: Double?, val repetitionChange: Int?,
-    val currentWeightKg: Double, val currentReps: Int, val repetitionPoints: List<PerformancePoint>,
+    val currentWeightKg: Double?, val currentReps: Int, val repetitionPoints: List<PerformancePoint>,
 )
 data class WorkoutSummary(
-    val history: WorkoutHistory, val exerciseCount: Int, val setCount: Int, val durationMillis: Long,
+    val history: WorkoutHistory, val exerciseCount: Int, val setCount: Int, val durationMillis: Long?,
     val progress: List<ExerciseProgress>, val muscles: Map<Muscle, MuscleRole>,
     val unknownExercises: Int, val trainingDays: Set<LocalDate>, val trainingCount: Int,
 )
@@ -29,8 +29,10 @@ object ProgressCalculator {
         val progress = exercises.groupBy { VisualCatalog.comparisonKey(it.exercise) }.mapNotNull { (key, group) ->
             if (key == null) return@mapNotNull null
             val profile = VisualCatalog.resolve(group.first().exercise) ?: return@mapNotNull null
+            val loadType = VisualCatalog.loadTypeFor(group.first().exercise)
             fun matching(workout: WorkoutHistory) = performed(workout).filter { VisualCatalog.comparisonKey(it.exercise) == key }.flatMap { it.sets }
-            fun best(sets: List<SetRecord>): SetRecord? = if (profile.loadType == LoadType.ASSISTANCE)
+            fun best(sets: List<SetRecord>): SetRecord? = if (loadType == LoadType.BODYWEIGHT) sets.maxByOrNull { it.reps }
+            else if (loadType == LoadType.ASSISTANCE)
                 sets.minWithOrNull(compareBy<SetRecord> { it.weightKg }.thenByDescending { it.reps })
             else sets.maxWithOrNull(compareBy<SetRecord> { it.weightKg }.thenBy { it.reps })
             val currentBest = best(group.flatMap { it.sets })!!
@@ -44,14 +46,14 @@ object ProgressCalculator {
             val repetitions = eligible.groupBy { Instant.ofEpochMilli(it.session.startedAt).atZone(zone).toLocalDate() }
                 .mapNotNull { (day, sessions) -> sessions.flatMap { matching(it) }.filter { it.weightKg == currentBest.weightKg }
                     .maxByOrNull { it.reps }?.let { PerformancePoint(day,it.weightKg,it.reps) } }.sortedBy { it.date }
-            ExerciseProgress(key, profile.label, profile.loadType, daily,
-                previous?.let { currentBest.weightKg - it.weightKg },
+            ExerciseProgress(key, profile.label, loadType, daily,
+                previous?.weightKg?.let { old -> currentBest.weightKg?.let { it - old } },
                 previousAtWeight?.let { currentBest.reps - it.reps },
                 currentBest.weightKg, currentBest.reps, repetitions)
         }
         return WorkoutSummary(
             current, exercises.size, exercises.sumOf { it.sets.size },
-            ((current.session.endedAt ?: current.session.startedAt) - current.session.startedAt).coerceAtLeast(0),
+            current.session.activeDurationMillis,
             progress, MuscleCatalog.combine(exercises.mapNotNull { VisualCatalog.resolve(it.exercise) }),
             exercises.count { VisualCatalog.resolve(it.exercise) == null },
             trainingDays(history, zone).filter { YearMonth.from(it) == YearMonth.from(date) }.toSet(),

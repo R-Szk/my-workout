@@ -137,7 +137,7 @@ class SessionExerciseEditorTest {
         editor.add(today, 9)
         assertEquals(historicalSession, db.workoutSessionDao().session(session))
         assertEquals(historicalExercises, db.workoutSessionDao().exercises(session))
-        assertEquals(35.0, db.workoutSessionDao().record(record)!!.weightKg, 0.0)
+        assertEquals(35.0, db.workoutSessionDao().record(record)!!.weightKg!!, 0.0)
         assertEquals(catalog, WorkoutRepository(db).observeRoutine(1).first())
         expectInvalid { editor.skip(oldIds[0]) }
         expectInvalid { editor.reorder(session, oldIds.reversed()) }

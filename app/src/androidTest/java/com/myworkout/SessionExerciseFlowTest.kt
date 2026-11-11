@@ -33,7 +33,9 @@ class SessionExerciseFlowTest {
         fun click(selector:BySelector) = actions.click(selector)
         fun clickText(text:String) = actions.click(text)
         fun visible(text:String) = actions.visible(text)
+        LegacyUiFixture.ensure()
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            clickText("マシントレーニング")
             clickText("トレーニング開始")
             visible("チェストプレス")
             createdSessionId = runBlocking {
@@ -66,12 +68,13 @@ class SessionExerciseFlowTest {
             click(By.desc("2番目のチェストプレスのスキップを解除"))
             clickText("2. チェストプレス")
             visible("チェストプレス")
-            clickText("セット完了")
+            click(By.desc("重量を増やす"))
+            clickText("1セット完了")
             visible("記録済み：1セット")
             clickText("取り消し")
             clickText("トレーニングを終了")
             clickText("終了する")
-            visible("トレーニングを保存して終了しました。")
+            visible("セットが未記録のため、記録を残さず終了しました。")
         }
     }
 }

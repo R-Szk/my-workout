@@ -21,6 +21,21 @@ internal class UiActions(private val device: UiDevice) {
         return item!!
     }
     fun click(text:String) = click(By.text(text))
-    fun click(selector:BySelector) { find(selector).click();device.waitForIdle() }
+    fun click(selector:BySelector) {
+        repeat(3) { attempt ->
+            try { find(selector).click(); device.waitForIdle(); return }
+            catch (stale: StaleObjectException) { if (attempt == 2) throw stale; device.waitForIdle() }
+        }
+    }
+    fun setText(selector: BySelector, value: String) {
+        repeat(3) { attempt ->
+            try {
+                find(selector).text = value
+                org.junit.Assert.assertTrue("Input was not applied", device.wait(Until.hasObject(By.clazz("android.widget.EditText").text(value)), 3000))
+                device.waitForIdle(); return
+            }
+            catch (stale: StaleObjectException) { if (attempt == 2) throw stale; device.waitForIdle() }
+        }
+    }
     fun visible(text:String) { find(By.text(text)) }
 }

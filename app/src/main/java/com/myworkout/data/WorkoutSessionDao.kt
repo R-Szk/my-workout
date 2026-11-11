@@ -34,7 +34,10 @@ interface WorkoutSessionDao {
     suspend fun previousRecord(machineId: Long): SetRecord?
 
     @Transaction
-    @Query("SELECT * FROM workout_sessions WHERE status = 'COMPLETED' ORDER BY startedAt DESC, id DESC")
+    @Query("""SELECT s.* FROM workout_sessions s WHERE s.status = 'COMPLETED'
+        AND EXISTS (SELECT 1 FROM session_exercises e INNER JOIN set_records r ON r.sessionExerciseId=e.id
+            WHERE e.sessionId=s.id AND e.status <> 'SKIPPED')
+        ORDER BY s.startedAt DESC, s.id DESC""")
     fun observeHistory(): Flow<List<WorkoutHistory>>
 
     @Transaction
@@ -51,6 +54,11 @@ interface WorkoutSessionDao {
     @Query("UPDATE session_exercises SET position = :position WHERE id = :id")
     suspend fun updatePosition(id: Long, position: Int)
     @Insert suspend fun insertRecord(record: SetRecord): Long
+    @Query("UPDATE set_records SET weightKg = :weightKg, reps = :reps WHERE id = :id")
+    suspend fun updateRecordValues(id: Long, weightKg: Double?, reps: Int)
     @Update suspend fun updateSession(session: WorkoutSession)
+    @Query("DELETE FROM workout_sessions WHERE id = :id AND status = 'COMPLETED' AND activeSlot IS NULL")
+    suspend fun deleteCompletedSession(id: Long): Int
+
     @Query("DELETE FROM set_records WHERE id = :id") suspend fun deleteRecord(id: Long)
 }

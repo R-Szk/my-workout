@@ -46,7 +46,7 @@ class SessionControllerTest {
         val sets = controller.resumeActive()!!.exercises.first().sets
         assertEquals(2, sets.size)
         assertEquals(listOf(1, 2), sets.map { it.sequence })
-        assertEquals(20.0, sets.first().weightKg, 0.0)
+        assertEquals(20.0, sets.first().weightKg!!, 0.0)
         assertEquals(10, sets.first().reps)
     }
 
@@ -54,7 +54,7 @@ class SessionControllerTest {
         val starts = (1..2).map { async(Dispatchers.Default) { SessionController(db).start(1) } }.awaitAll()
         assertEquals(starts.first(), starts.last())
         val exercise = controller.resumeActive()!!.exercises.first().exercise.id
-        val saves = (1..2).map { async(Dispatchers.Default) { SessionController(db).completeSet(exercise, 0.0, 1, "same-intent") } }.awaitAll()
+        val saves = (1..2).map { async(Dispatchers.Default) { SessionController(db).completeSet(exercise, 2.5, 1, "same-intent") } }.awaitAll()
         assertEquals(saves.first(), saves.last())
         assertEquals(1, controller.resumeActive()!!.exercises.first().sets.size)
     }
@@ -81,7 +81,7 @@ class SessionControllerTest {
         val restored = SessionController(db).resumeActive()!!
         assertEquals(SessionStatus.PAUSED, restored.session.status)
         assertEquals(2, restored.session.currentPosition)
-        assertEquals(27.5, restored.exercises.first().sets.single().weightKg, 0.0)
+        assertEquals(27.5, restored.exercises.first().sets.single().weightKg!!, 0.0)
         controller.resume(session)
         assertEquals(SessionStatus.ACTIVE, controller.resumeActive()!!.session.status)
     }
@@ -94,7 +94,7 @@ class SessionControllerTest {
         controller.start(2)
         val workout = controller.resumeActive()!!
         val suggestion = workout.exercises[2].previous!!
-        assertEquals(12.5, suggestion.weightKg, 0.0)
+        assertEquals(12.5, suggestion.weightKg!!, 0.0)
         assertEquals(12, suggestion.reps)
         assertTrue(workout.exercises.all { it.sets.isEmpty() })
         // Merely reading a suggestion, including after reconstruction, never creates a record.
@@ -120,15 +120,48 @@ class SessionControllerTest {
         assertNull(controller.resumeActive())
         val id = controller.start(1)
         val exercise = controller.resumeActive()!!.exercises.first().exercise.id
-        for (weight in listOf(-1.0, Double.NaN, Double.POSITIVE_INFINITY)) {
+        for (weight in listOf(0.0, -0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY)) {
             expectInvalid { controller.completeSet(exercise, weight, 10) }
         }
         expectInvalid { controller.completeSet(exercise, 20.0, 0) }
         expectInvalid { controller.completeSet(999, 20.0, 10) }
         expectInvalid { controller.moveTo(id, 5) }
         assertTrue(controller.resumeActive()!!.exercises.all { it.sets.isEmpty() })
-        controller.completeSet(exercise, 0.0, 1)
+        controller.completeSet(exercise, 0.5, 1)
         assertEquals(1, controller.resumeActive()!!.exercises.first().sets.size)
+    }
+
+    @Test fun editFirstSetKeepsOrderIdentityAndOtherSets() = runBlocking {
+        val session = controller.start(1)
+        val exercise = controller.resumeActive()!!.exercises.first().exercise.id
+        repeat(3) { controller.completeSet(exercise, 20.0 + it * 2.5, 10 - it) }
+        val before = db.workoutSessionDao().records(exercise)
+        controller.updateSet(before.first().id, 17.5, 12)
+        val after = db.workoutSessionDao().records(exercise)
+        assertEquals(before.map { it.id }, after.map { it.id })
+        assertEquals(before.first().copy(weightKg = 17.5, reps = 12), after.first())
+        assertEquals(before.drop(1), after.drop(1))
+        controller.pause(session)
+        controller.resume(session)
+        assertEquals(after, controller.resumeActive()!!.exercises.first().sets)
+    }
+
+    @Test fun invalidOrInactiveSetEditsDoNotChangeRecords() = runBlocking {
+        val session = controller.start(1)
+        val exercise = controller.resumeActive()!!.exercises.first().exercise.id
+        val id = controller.completeSet(exercise, 20.0, 10)
+        val before = db.workoutSessionDao().record(id)
+        for (weight in listOf(0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY)) {
+            expectInvalid { controller.updateSet(id, weight, 10) }
+        }
+        expectInvalid { controller.updateSet(id, 20.0, 0) }
+        expectInvalid { controller.updateSet(999, 20.0, 10) }
+        controller.pause(session)
+        expectInvalid { controller.updateSet(id, 25.0, 12) }
+        controller.resume(session)
+        controller.finish(session)
+        expectInvalid { controller.updateSet(id, 25.0, 12) }
+        assertEquals(before, db.workoutSessionDao().record(id))
     }
 
     private suspend fun expectInvalid(action: suspend () -> Unit) {

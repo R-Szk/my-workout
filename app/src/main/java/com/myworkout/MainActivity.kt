@@ -8,6 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.myworkout.feature.guide.ExerciseGuideScreen
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,6 +27,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle=SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),navigationBarStyle=SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         setContent {
             WorkoutTheme {
+                var showGuide by rememberSaveable { mutableStateOf(false) }
+                val screenState=rememberSaveableStateHolder()
                 val catalog:CatalogViewModel=viewModel()
                 val catalogState by catalog.state.collectAsStateWithLifecycle()
                 val workout:WorkoutViewModel=viewModel()
@@ -34,6 +39,7 @@ class MainActivity : ComponentActivity() {
                 Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background) {
                     Box(Modifier.safeDrawingPadding()) {
                         when {
+                            showGuide -> ExerciseGuideScreen(onRecord={ exercise -> workout.startHomeExercise(exercise);showGuide=false },hasActive=state.active!=null) { showGuide = false }
                             state.showWorkout && state.active!=null -> WorkoutScreen(state,workout)
                             state.summaryId!=null -> {
                                 val report=summaryState.summary
@@ -44,7 +50,7 @@ class MainActivity : ComponentActivity() {
                                     TextButton(onClick=workout::closeSummary){Text("ホームへ")}
                                 }
                             }
-                            else -> HomeScreen(catalogState,state,workout,catalog::load,summaryState.history,summaryState.error,summary::retry)
+                            else -> screenState.SaveableStateProvider("home") { HomeScreen(catalogState,state,workout,catalog::load,summaryState.history,summaryState.error,summary::retry,onOpenGuide={ showGuide = true }) }
                         }
                     }
                 }

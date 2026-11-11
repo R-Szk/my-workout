@@ -38,7 +38,7 @@ class VisualMigrationTest {
             old.execSQL("INSERT INTO set_records VALUES(1,1,1,30,10,101,'before-upgrade')")
             old.version=3
         }
-        val db=Room.databaseBuilder(context,AppDatabase::class.java,name).build()
+        val db=Room.databaseBuilder(context,AppDatabase::class.java,name).addMigrations(AppDatabase.MIGRATION_4_5).build()
         try {
             val active=SessionController(db).resumeActive()!!
             assertEquals(1,active.session.currentPosition)
@@ -46,7 +46,7 @@ class VisualMigrationTest {
             assertEquals(ExerciseStatus.SKIPPED,active.exercises[1].exercise.status)
             assertNull(active.exercises[0].exercise.visualKey)
             assertNull(VisualCatalog.resolve(active.exercises[0].exercise))
-            assertEquals(30.0,active.exercises[0].sets.single().weightKg,0.0)
+            assertEquals(30.0,active.exercises[0].sets.single().weightKg!!, 0.0)
             assertEquals("自分の複合機",db.openHelper.readableDatabase.query("SELECT name FROM machines WHERE id=5").use { it.moveToFirst();it.getString(0) })
         } finally { db.close();context.deleteDatabase(name) }
     }

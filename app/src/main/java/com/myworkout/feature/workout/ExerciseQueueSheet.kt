@@ -93,7 +93,7 @@ fun ExerciseQueueSheet(state: WorkoutUiState, model: WorkoutViewModel, onDismiss
         }
     }
     if (showPicker) ExercisePicker(
-        machines = state.machines,
+        machines = state.machines.filter { (it.catalogKey?.startsWith("home.") == true) == (active.session.routineKey?.startsWith("home.") == true) },
         onSelect = { machineId -> showPicker = false; scrollToAdded = true; model.addMachine(machineId) },
         onDismiss = { showPicker = false },
     )

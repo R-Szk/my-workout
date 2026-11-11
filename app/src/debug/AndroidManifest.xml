@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Kept for explicit instrumentation tests, never shown as an app launcher. -->
+        <activity android:name="com.myworkout.feature.animation.CurlPrototypeActivity"
+            android:exported="false" android:label="My Workout カール試作" />
+    </application>
+</manifest>

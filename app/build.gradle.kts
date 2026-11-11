@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Keep optional legacy artwork separate from the mandatory static exercise resources.
+val syncLocalWorkoutArtwork by tasks.registering(Sync::class) {
+    from(rootProject.file("design-assets")) {
+        include("machines/**", "muscles/**")
+    }
+    into(layout.buildDirectory.dir("generated/local-workout-artwork"))
+}
+
 android {
     namespace = "com.myworkout"
     compileSdk {
@@ -33,7 +41,7 @@ android {
     }
     // Optional local artwork is packaged for this device, never copied into version control.
     if (!providers.gradleProperty("withoutLocalArt").isPresent) {
-        sourceSets.getByName("main").assets.srcDir(rootProject.file("design-assets"))
+        sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/local-workout-artwork").get().asFile)
     }
     sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
     buildFeatures { compose = true }
@@ -64,4 +72,10 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+if (!providers.gradleProperty("withoutLocalArt").isPresent) {
+    tasks.matching { (it.name.startsWith("merge") && it.name.endsWith("Assets")) || it.name.contains("Lint") || it.name.startsWith("lint") }.configureEach {
+        dependsOn(syncLocalWorkoutArtwork)
+    }
+}
+
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }

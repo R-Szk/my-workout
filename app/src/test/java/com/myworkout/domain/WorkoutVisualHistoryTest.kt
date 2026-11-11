@@ -27,7 +27,7 @@ class WorkoutVisualHistoryTest {
         controller.finish(first); controller.start(1)
         val next = controller.resumeActive()!!.exercises.first()
         assertEquals(3, next.previousSets.size)
-        assertEquals(20.0, next.previous!!.weightKg, 0.0)
+        assertEquals(20.0, next.previous!!.weightKg!!, 0.0)
         assertTrue(next.sets.isEmpty())
     }
     @Test fun legacyUnclassifiedActiveRecordsCanContinueWithoutRewritingTheirKind() = runBlocking {

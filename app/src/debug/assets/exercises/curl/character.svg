@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 600">
+  <g id="farUpper">
+    <path fill="#CB9066" stroke="#3C3440" stroke-width="2" d="M111 186 Q99 196 103 218 L107 245 Q112 256 126 250 L139 202 Z" />
+    <path fill="#E4AC80" d="M110 194 Q105 213 114 240 L123 243 131 204Z" />
+  </g>
+  <g id="body">
+    <path fill="#C98E65" stroke="#3C3440" stroke-width="2" d="M133 329 L167 332 165 401 Q159 426 157 449 L155 516 131 519 124 453 Q121 429 127 405 Z" />
+    <path fill="#E8B183" d="M137 349 L155 351 153 402 Q142 426 145 451 L144 506 135 508 130 452Z" />
+    <path fill="#B97B56" d="M129 414 Q142 422 153 408 L151 437 138 454 129 442Z" />
+    <path fill="#1B293C" stroke="#101A2A" stroke-width="2" d="M130 504 L153 504 159 532 Q152 544 119 550 L106 543 Q111 529 125 519Z" />
+    <path fill="#EDF2F4" d="M107 536 Q123 544 156 528 L159 540 Q139 555 109 551 L102 544Z" />
+    <path fill="none" stroke="#C3CEDB" stroke-width="3" d="M128 516 L145 516 M123 523 L147 521 M118 530 L146 526" />
+    <path fill="#DEA477" stroke="#3C3440" stroke-width="2" d="M172 329 L209 328 211 395 Q201 428 205 457 L219 516 195 523 177 458 Q169 433 176 402 Z" />
+    <path fill="#F0BD8E" d="M185 345 L201 345 199 394 Q188 422 191 447 L207 508 197 510 183 456 Q177 433 185 397Z" />
+    <path fill="#C58B61" d="M178 403 Q191 413 204 396 L201 429 189 447 179 432Z" />
+    <path fill="#203249" stroke="#101A2A" stroke-width="2" d="M194 507 L216 503 224 523 Q236 530 242 540 L240 549 Q218 557 186 542 L185 531Z" />
+    <path fill="#F4F6F6" d="M186 535 Q213 549 241 538 L246 545 242 555 Q211 560 182 544Z" />
+    <path fill="#718499" d="M218 514 L228 527 217 535 202 531Z" />
+    <path fill="none" stroke="#D9E1EA" stroke-width="3" d="M199 517 L217 520 M196 523 L220 526 M193 530 L216 532" />
+    <path fill="#22617B" stroke="#142C41" stroke-width="2.5" d="M121 276 Q163 267 204 278 L218 352 Q197 366 174 356 L165 313 158 358 Q136 365 116 352Z" />
+    <path fill="#2E7A96" d="M130 287 L158 282 151 349 Q139 355 125 349Z" />
+    <path fill="#3484A0" d="M172 283 L196 283 207 347 182 350 170 311Z" />
+    <path fill="#17465E" d="M164 289 L171 313 177 351 164 335 158 355 160 310Z" />
+    <path fill="none" stroke="#4C92A9" stroke-width="1.5" d="M126 291 L120 348 M199 292 L211 347" />
+    <path fill="#D89C70" stroke="#3C3440" stroke-width="2" d="M148 113 L181 110 186 141 170 154 145 143Z" />
+    <path fill="#F1BC8C" d="M158 118 L177 116 178 139 168 145 153 138Z" />
+    <path fill="#243449" stroke="#101E30" stroke-width="2.5" d="M144 134 Q128 135 114 145 Q96 154 96 189 L113 206 131 198 126 224 121 278 Q159 292 205 280 L202 221 212 200 224 190 Q222 158 199 145 L184 136 Q170 159 144 134Z" />
+    <path fill="#30445D" d="M142 146 Q137 171 130 185 L137 206 Q164 214 199 197 L201 171 183 147 Q166 163 142 146Z" />
+    <path fill="#1B2A3E" d="M128 218 Q166 232 201 212 L202 242 Q159 249 126 238Z" />
+    <path fill="#2B3D54" d="M127 247 Q160 257 201 246 L201 274 Q161 284 126 272Z" />
+    <path fill="#394D66" d="M114 151 Q105 164 104 184 L116 194 125 188 126 163Z" />
+    <path fill="#18283D" d="M199 155 L212 166 219 188 207 199 195 191Z" />
+    <path fill="none" stroke="#596B82" stroke-width="1.5" d="M143 142 Q127 159 124 184 M186 143 Q199 157 206 182 M128 217 Q133 244 126 274" />
+    <path fill="none" stroke="#152338" stroke-width="3" d="M144 137 Q168 165 185 138" />
+    <path fill="#E6AD7F" stroke="#3C3440" stroke-width="2" d="M136 65 Q142 41 166 40 Q190 40 197 65 L197 87 201 96 194 102 Q189 123 175 131 Q156 132 143 112 L137 96 Q127 93 129 81 Q130 75 136 78Z" />
+    <path fill="#F2BD8D" d="M148 67 Q166 54 188 66 L190 92 195 98 188 102 Q183 120 174 125 Q160 123 149 108Z" />
+    <path fill="#CC9068" d="M136 80 Q130 77 132 87 L140 94 143 108 150 117 143 92Z" />
+    <path fill="#202A38" stroke="#111C2A" stroke-width="2" d="M132 84 L125 69 131 54 124 50 141 44 137 35 153 38 165 26 168 36 185 32 184 40 199 44 194 51 204 61 198 77 189 66 180 77 180 57 165 77 167 58 150 76 149 62 139 79 139 94Z" />
+    <path fill="#354050" d="M137 56 L151 46 161 43 153 58 172 40 178 42 170 57 187 46 191 51 182 59 180 53 166 65 165 53 149 66 148 57Z" />
+  </g>
+  <g id="farForearm" transform="translate(119 244) rotate(-8)">
+    <path fill="#D49B71" stroke="#3C3440" stroke-width="2" d="M-10 -5 Q-18 14 -12 38 L-8 75 -9 85 Q0 94 10 84 L9 72 12 36 Q15 11 9 -5Z" />
+    <path fill="#E8B184" d="M-5 1 Q-9 29 -3 50 L0 78 6 78 6 45 Q10 14 4 0Z" />
+  </g>
+  <g id="farDumbbell" data-origin-y="96" transform="translate(132.36 339.07) translate(0 -96)">
+    <path fill="#8B99A6" stroke="#172232" stroke-width="2" d="M-25 92 L26 92 26 100 -25 100Z" />
+    <path fill="#263442" stroke="#14202D" stroke-width="2" d="M-32 77 Q-37 94 -32 112 L-19 115 Q-13 94 -19 75Z M20 77 Q14 95 20 113 L32 113 Q39 95 32 76Z" />
+    <path fill="#485968" d="M-29 81 L-24 80 -23 109 -28 109Z M26 81 L30 81 31 108 27 108Z" />
+  </g>
+  <g id="farHand" data-origin-y="96" transform="translate(132.36 339.07) translate(0 -96)">
+    <path fill="#E2A77B" stroke="#493847" stroke-width="1.5" d="M-8 79 L-11 88 -6 101 5 103 12 96 10 86 7 80 3 87 -1 82Z" />
+    <path fill="none" stroke="#AC744F" stroke-width="1.2" d="M-7 89 L-2 96 M-3 87 L2 96 M1 87 L6 96" />
+  </g>
+  <g id="nearUpper">
+    <path fill="#E4AA7C" stroke="#3C3440" stroke-width="2" d="M193 195 L215 194 Q222 214 218 229 L216 251 Q205 263 193 252 L187 219Z" />
+    <path fill="#F0BB8B" d="M198 200 L210 201 Q214 219 209 235 L210 248 200 250 194 226Z" />
+    <path fill="#C58A60" d="M192 218 Q197 233 201 236 L199 252 193 248Z" />
+    <path fill="#25364D" stroke="#152338" stroke-width="2" d="M190 165 Q211 163 221 180 L224 198 Q208 210 188 198 L184 184Z" />
+    <path fill="#364B64" d="M192 171 Q206 170 214 183 L216 195 193 195 189 182Z" />
+    <path fill="none" stroke="#5F7185" stroke-width="1.5" d="M189 195 Q206 205 222 195" />
+  </g>
+  <g id="nearForearm" transform="translate(204 252) rotate(-8)">
+    <path fill="#E3A779" stroke="#3C3440" stroke-width="2" d="M-11 -5 Q-18 17 -12 40 L-8 76 -10 86 Q0 96 11 85 L10 74 14 38 Q16 13 10 -5Z" />
+    <path fill="#F2BF90" d="M-5 1 Q-10 24 -3 51 L0 80 7 80 7 47 Q11 17 5 0Z" />
+    <path fill="#C78C63" d="M-12 19 L-8 48 -5 73 -8 83 -11 65 -15 33Z" />
+  </g>
+  <g id="nearDumbbell" data-origin-y="96" transform="translate(217.36 347.07) translate(0 -96)">
+    <path fill="#A7B4C0" stroke="#192838" stroke-width="2" d="M-27 92 L29 92 29 101 -27 101Z" />
+    <path fill="#253545" stroke="#101E2C" stroke-width="2.5" d="M-34 77 Q-41 94 -34 114 L-20 117 Q-13 95 -20 74Z M21 76 Q14 96 21 116 L35 115 Q42 96 35 74Z" />
+    <path fill="#4A5D6E" d="M-31 81 L-25 79 -24 111 -30 111Z M28 81 L33 80 34 110 29 111Z" />
+    <path fill="#172636" d="M-20 77 Q-15 94 -20 113 L-23 111 -23 80Z M22 80 L25 81 25 111 22 113 Q18 98 22 80Z" />
+  </g>
+  <g id="nearHand" data-origin-y="96" transform="translate(217.36 347.07) translate(0 -96)">
+    <path fill="#EDB487" stroke="#493847" stroke-width="1.5" d="M-8 78 L-12 88 -6 103 6 105 14 98 11 86 7 80 3 88 -1 82Z" />
+    <path fill="none" stroke="#B37A54" stroke-width="1.4" d="M-8 89 L-2 99 M-3 88 L3 99 M2 88 L8 98" />
+  </g>
+</svg>

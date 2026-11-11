@@ -8,7 +8,7 @@ enum class Muscle(val label: String, val back: Boolean = false) {
     HAMSTRINGS("ハムストリングス", true), ADDUCTORS("内転筋群"), ABS("腹直筋"),
     OBLIQUES("腹斜筋"), ERECTORS("脊柱起立筋", true),
 }
-enum class LoadType { EXTERNAL, ASSISTANCE }
+enum class LoadType { EXTERNAL, ASSISTANCE, BODYWEIGHT }
 enum class MuscleRole { PRIMARY, SECONDARY }
 data class VisualAsset(val key: String, val name: String, val machineImage: String, val muscleImage: String)
 data class VisualProfile(
@@ -17,7 +17,7 @@ data class VisualProfile(
     val loadType: LoadType = LoadType.EXTERNAL,
     val useAssetMuscleImage: Boolean = true,
 ) {
-    val machineImage: String get() = VisualCatalog.assets.first { it.key == assetKey }.machineImage
+    val machineImage: String? get() = VisualCatalog.assets.firstOrNull { it.key == assetKey }?.machineImage
     val muscleImage: String? get() = if (useAssetMuscleImage) VisualCatalog.assets.first { it.key == assetKey }.muscleImage else null
 }
 
@@ -88,7 +88,9 @@ object VisualCatalog {
         VisualProfile("assisted_dip", "アシストディップス", "dip_chin_assist", setOf(Muscle.CHEST, Muscle.TRICEPS), setOf(Muscle.FRONT_DELTS), LoadType.ASSISTANCE, false),
         VisualProfile("assisted_chin", "アシストチンアップ", "dip_chin_assist", setOf(Muscle.LATS), setOf(Muscle.BICEPS, Muscle.MID_BACK), LoadType.ASSISTANCE, false),
     )
-    fun find(key: String?): VisualProfile? = profiles.find { it.key == key }
+    fun find(key: String?): VisualProfile? = profiles.find { it.key == key } ?: ExerciseSteps.find(key)?.let {
+        VisualProfile(it.visualKey, it.name, "", it.muscles, loadType = if (HomeCatalog.isBodyweight(it.id)) LoadType.BODYWEIGHT else LoadType.EXTERNAL, useAssetMuscleImage = false)
+    }
     fun defaultForMachine(id: Long): VisualProfile? = find(when (id) {
         1L -> "chest_press"; 2L -> "lat_pulldown"; 4L -> "lateral_raise"
         6L -> "vertical_incline_bench_press"; 8L -> "preacher_curl"; else -> null
@@ -103,5 +105,6 @@ object VisualCatalog {
     }
     fun resolve(exercise: SessionExercise): VisualProfile? = find(exercise.visualKey)
         ?: if (exercise.visualKey == null) defaultForMachine(exercise.machineId) else null
+    fun loadTypeFor(exercise: SessionExercise): LoadType = exercise.loadType ?: resolve(exercise)?.loadType ?: LoadType.EXTERNAL
     fun comparisonKey(exercise: SessionExercise): String? = resolve(exercise)?.let { "${exercise.machineId}:${it.key}" }
 }

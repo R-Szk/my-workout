@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "mode": "three_static_steps",
+  "exercises": [
+    {"id":"push_up","name_ja":"プッシュアップ","menu":"A","steps":["exercises/push_up/step_1.png","exercises/push_up/step_2.png","exercises/push_up/step_3.png"]},
+    {"id":"lateral_raise","name_ja":"ダンベル・サイドレイズ","menu":"A","steps":["exercises/lateral_raise/step_1.png","exercises/lateral_raise/step_2.png","exercises/lateral_raise/step_3.png"]},
+    {"id":"triceps_extension","name_ja":"ダンベル・トライセプスエクステンション","menu":"A","steps":["exercises/triceps_extension/step_1.png","exercises/triceps_extension/step_2.png","exercises/triceps_extension/step_3.png"]},
+    {"id":"one_arm_row","name_ja":"ワンハンド・ダンベルロー","menu":"B","steps":["exercises/one_arm_row/step_1.png","exercises/one_arm_row/step_2.png","exercises/one_arm_row/step_3.png"]},
+    {"id":"dumbbell_curl","name_ja":"ダンベルカール","menu":"B","steps":["exercises/dumbbell_curl/step_1.png","exercises/dumbbell_curl/step_2.png","exercises/dumbbell_curl/step_3.png"]},
+    {"id":"squat","name_ja":"スクワット","menu":"B","steps":["exercises/squat/step_1.png","exercises/squat/step_2.png","exercises/squat/step_3.png"]}
+  ]
+}

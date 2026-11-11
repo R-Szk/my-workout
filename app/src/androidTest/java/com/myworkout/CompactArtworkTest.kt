@@ -52,26 +52,33 @@ class CompactArtworkTest {
         val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         var created:Long?=null
         try {
+            LegacyUiFixture.ensure()
             ActivityScenario.launch(MainActivity::class.java).use { scenario ->
                 val actions=UiActions(device)
+                actions.click("マシントレーニング")
                 actions.click("トレーニング開始")
+                actions.visible("チェストプレス")
                 created=runBlocking { controller.resumeActive()!!.session.id }
                 scenario.onActivity { activity ->
                     val model=ViewModelProvider(activity)[WorkoutViewModel::class.java]
                     activity.setContent {
                         WorkoutTheme {
                             val state by model.state.collectAsState()
-                            Box(Modifier.fillMaxWidth().height(230.dp)) { WorkoutScreen(state,model) }
+                            Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+                                Box(Modifier.fillMaxWidth().height(230.dp)) { WorkoutScreen(state,model) }
+                            }
                         }
                     }
                 }
+                actions.find(By.textContains("記録0セット"))
                 val field=actions.find(By.clazz("android.widget.EditText"))
                 assertTrue(field.visibleBounds.height()>0)
                 field.text="5"
                 assertTrue(device.hasObject(By.descContains("筋肉図")))
-                actions.click("セット完了")
+                actions.click("1セット完了")
+                actions.find(By.textContains("記録1セット"))
                 val record=runBlocking { controller.resumeActive()!!.exercises.first().sets.single() }
-                assertEquals(5.0,record.weightKg,0.0)
+                assertEquals(5.0,record.weightKg!!, 0.0)
                 runBlocking { controller.undoSet(record.id) }
             }
         } finally { created?.let { runBlocking { controller.finish(it) } } }

@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.myworkout.data.*
 import com.myworkout.data.Machine
 import com.myworkout.data.AppDatabase
 import com.myworkout.data.WorkoutRepository
@@ -40,7 +41,7 @@ class WorkoutViewModel(application: Application, private val savedState: SavedSt
 
     fun reload() = perform {
         val repository = WorkoutRepository(database)
-        repository.seedIfEmpty()
+        repository.prepareHome()
         mutableState.value = mutableState.value.copy(machines = repository.observeMachines().first())
     }
 
@@ -48,6 +49,12 @@ class WorkoutViewModel(application: Application, private val savedState: SavedSt
         val id = controller.start(routineId)
         controller.resume(id)
         mutableState.value = mutableState.value.copy(showWorkout = true, message = null)
+    }
+
+    fun switchRoutine(expectedSessionId: Long, routineId: Long) = perform {
+        controller.finishAndStart(expectedSessionId, routineId)
+        savedState["summaryId"] = null
+        mutableState.value = mutableState.value.copy(showWorkout = true, summaryId = null, message = null)
     }
 
     fun resume() = perform {
@@ -90,29 +97,75 @@ class WorkoutViewModel(application: Application, private val savedState: SavedSt
 
     fun chooseVisual(exerciseId: Long, key: String) = perform { controller.chooseVisual(exerciseId, key) }
     fun showSummary(id: Long) { savedState["summaryId"] = id; mutableState.value = mutableState.value.copy(summaryId = id) }
+    fun deleteWorkoutHistory(id: Long, onDeleted: () -> Unit) = perform {
+        require(WorkoutHistoryRepository(database).deleteCompleted(id)) { "記録を削除できませんでした。履歴を確認してください。" }
+        if (mutableState.value.summaryId == id) {
+            savedState["summaryId"] = null
+            mutableState.value = mutableState.value.copy(summaryId = null)
+        }
+        mutableState.value = mutableState.value.copy(message = "ワークアウトを削除しました。")
+        onDeleted()
+    }
+
     fun closeSummary() { savedState["summaryId"] = null; mutableState.value = mutableState.value.copy(summaryId = null) }
 
     fun completeSet(exerciseId: Long, weight: String, reps: String, requestId: String) {
         if (mutableState.value.busy) return
-        val parsedWeight = weight.trim().replace(',', '.').toDoubleOrNull()
-        val parsedReps = reps.trim().toIntOrNull()
-        if (parsedWeight == null || !parsedWeight.isFinite() || parsedWeight < 0 || parsedReps == null || parsedReps < 1) {
-            mutableState.value = mutableState.value.copy(error = "重量は0以上の数値、回数は1以上の整数を入力してください。")
-            return
+        val exercise = mutableState.value.active?.exercises?.find { it.exercise.id == exerciseId }?.exercise ?: return
+        val parsed = try { parseInput(exercise, weight, reps) } catch (error: IllegalArgumentException) {
+            mutableState.value = mutableState.value.copy(error = error.message); return
         }
         val now = SystemClock.elapsedRealtime()
         if (now - lastSaveIntent < 600) return
         lastSaveIntent = now
-        perform { controller.completeSet(exerciseId, parsedWeight, parsedReps, requestId) }
+        perform { controller.completeSet(exerciseId, parsed.first, parsed.second, requestId) }
+    }
+
+    fun clearError() { mutableState.value = mutableState.value.copy(error = null) }
+
+    fun updateSet(setId: Long, weight: String, reps: String, onSaved: () -> Unit) = perform {
+        val exercise = requireNotNull(mutableState.value.active?.exercises?.find { item -> item.sets.any { it.id == setId } }?.exercise)
+        val parsed = parseInput(exercise, weight, reps)
+        controller.updateSet(setId, parsed.first, parsed.second)
+        onSaved()
     }
 
     fun undo(setId: Long) = perform { controller.undoSet(setId) }
 
     fun finish() = perform {
         val id = requireNotNull(mutableState.value.active).session.id
-        controller.finish(id)
-        savedState["summaryId"] = id
-        mutableState.value = mutableState.value.copy(showWorkout = false, active = null, summaryId = id, message = "トレーニングを保存して終了しました。")
+        val recorded = controller.finish(id)
+        val summaryId = id.takeIf { recorded }
+        savedState["summaryId"] = summaryId
+        mutableState.value = mutableState.value.copy(showWorkout = false, active = null, summaryId = summaryId,
+            message = if(recorded) "トレーニングを保存して終了しました。" else "セットが未記録のため、記録を残さず終了しました。")
+    }
+
+    private fun parseInput(exercise: SessionExercise, weight: String, reps: String): Pair<Double?,Int> {
+        val bodyweight = VisualCatalog.loadTypeFor(exercise) == LoadType.BODYWEIGHT
+        val count = reps.trim().toIntOrNull()
+        if (bodyweight) {
+            require(count != null && count >= 1) { "回数は1以上の整数を入力してください。" }
+            return null to count
+        }
+        val kg = weight.trim().replace(',', '.').toDoubleOrNull()
+        require(kg != null && kg.isFinite() && kg > 0 && count != null && count >= 1) {
+            "重量は0より大きい数値、回数は1以上の整数を入力してください。"
+        }
+        return kg to count
+    }
+
+    fun startHomeExercise(item: ExerciseStepSet) = perform {
+        val old = controller.resumeActive()
+        if (old != null) controller.resume(old.session.id)
+        else {
+            val repo = WorkoutRepository(database)
+            repo.prepareHome()
+            val routine = repo.observeHomeRoutines().first().first { it.routine.catalogKey == "home.${item.menu}" }
+            val id = controller.start(routine.routine.id)
+            controller.moveTo(id, routine.exercises.indexOfFirst { it.machine.visualKey == item.visualKey })
+        }
+        mutableState.value = mutableState.value.copy(showWorkout = true, message = null)
     }
 
     private fun perform(action: suspend () -> Unit) {

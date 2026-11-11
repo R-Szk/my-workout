@@ -26,7 +26,7 @@ private val bodyPaths = listOf(
 ).map { PathParser.createPathFromPathData(it)!!.asComposePath() }
 
 @Composable
-fun BodyMap(muscles: Map<Muscle, MuscleRole>, modifier: Modifier = Modifier) {
+fun BodyMap(muscles: Map<Muscle, MuscleRole>, modifier: Modifier = Modifier, primaryColor: Color = MainMuscleColor, secondaryColor: Color = SecondaryMuscleColor) {
     Canvas(modifier.semantics { contentDescription = "筋肉図。正面と背面。" + muscles.entries.joinToString { "${it.key.label}:${if (it.value == MuscleRole.PRIMARY) "メイン" else "補助"}" } }) {
         val scale = minOf(size.width / 390f, size.height / 460f)
         val x = (size.width - 390f * scale) / 2
@@ -39,7 +39,7 @@ fun BodyMap(muscles: Map<Muscle, MuscleRole>, modifier: Modifier = Modifier) {
                 bodyPaths.forEach { drawPath(it, base); drawPath(it, Color(0xFF9CACBF), style = Stroke(1.5f)) }
                 fun area(muscle: Muscle, cx: Float, cy: Float, rx: Float, ry: Float) {
                     val role = muscles[muscle] ?: return
-                    drawOval(if (role == MuscleRole.PRIMARY) MainMuscleColor else SecondaryMuscleColor, Offset(cx-rx,cy-ry), Size(rx*2,ry*2))
+                    drawOval(if (role == MuscleRole.PRIMARY) primaryColor else secondaryColor, Offset(cx-rx,cy-ry), Size(rx*2,ry*2))
                 }
                 fun paired(m: Muscle, left: Float, right: Float, cy: Float, rx: Float, ry: Float) { area(m,left,cy,rx,ry);area(m,right,cy,rx,ry) }
                 if (!back) {

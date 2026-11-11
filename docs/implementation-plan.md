@@ -1,5 +1,7 @@
 # My Workout — Androidアプリ実装計画書
 
+> 2026-11-10：以下は旧ジム向けの段階計画。自宅6種目の記録対応は `work-log/home-recording.md`、自宅全体の段階計画は `superpowers/plans/2026-11-08-home-workout.md` を参照。
+
 > **実装担当者向け**：この計画は各タスクを小さく区切り、テストを先に書いてから実装する。タスクごとに動作確認とレビューを行い、完了したらコミットする。実装時は `superpowers:executing-plans` または `superpowers:subagent-driven-development` の手順を利用する。
 
 **目的：** FIT365相模原での筋トレを簡単に記録し、重量・回数・身体写真の変化を実感できる、自分専用のAndroidアプリを作る。
@@ -72,7 +74,7 @@ Androidパッケージを `com.myworkout` とする。`data/` にRoom・DAO・�
 
 - [x] 開始・保存・取り消し・終了・再起動後の再開・重複タップ防止を検証する単体テストを書く。「前回値の提示だけでは保存されない」ことも検証する。
 - [x] `./gradlew testDebugUnitTest --tests '*SessionControllerTest'` で実装前の失敗を確認する。
-- [x] Roomのトランザクションと1種目記録画面を実装する。重量は0以上、回数は1以上の整数で入力を検証する。
+- [x] Roomのトランザクションと1種目記録画面を実装する。重量は0より大きい数値、回数は1以上の整数で入力を検証する。
 - [x] 単体テスト、エミュレーターでの `./gradlew connectedDebugAndroidTest`、ビルドを実行する。
 - [x] `feat: persist workout sets and resume sessions` をコミットする。
 

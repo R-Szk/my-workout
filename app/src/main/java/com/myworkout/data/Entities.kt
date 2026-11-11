@@ -2,17 +2,18 @@ package com.myworkout.data
 
 import androidx.room.*
 
-@Entity(tableName = "machines")
+@Entity(tableName = "machines", indices = [Index(value = ["catalogKey"], unique = true)])
 data class Machine(
     @PrimaryKey val id: Long,
     val name: String,
     val imageAsset: String? = null,
     val notes: String = "",
     val visualKey: String? = null,
+    val catalogKey: String? = null,
 )
 
-@Entity(tableName = "routines")
-data class Routine(@PrimaryKey val id: Long, val name: String)
+@Entity(tableName = "routines", indices = [Index(value = ["catalogKey"], unique = true)])
+data class Routine(@PrimaryKey val id: Long, val name: String, val catalogKey: String? = null)
 
 @Entity(
     tableName = "routine_exercises",
@@ -57,6 +58,9 @@ data class WorkoutSession(
     val currentPosition: Int = 0,
     // SQLite allows multiple NULLs in a unique index, but only one unfinished workout.
     val activeSlot: Int? = 1,
+    val routineKey: String? = null,
+    val activeDurationMillis: Long? = null,
+    val activeStartedAt: Long? = null,
 )
 
 @Entity(
@@ -75,6 +79,7 @@ data class SessionExercise(
     val targetReps: Int,
     @ColumnInfo(defaultValue = "'PENDING'") val status: ExerciseStatus = ExerciseStatus.PENDING,
     val visualKey: String? = null,
+    val loadType: LoadType? = null,
 )
 
 @Entity(
@@ -86,7 +91,7 @@ data class SetRecord(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val sessionExerciseId: Long,
     val sequence: Int,
-    val weightKg: Double,
+    val weightKg: Double?,
     val reps: Int,
     val completedAt: Long,
     val requestId: String,

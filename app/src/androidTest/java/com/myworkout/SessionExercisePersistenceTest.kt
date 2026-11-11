@@ -47,13 +47,13 @@ class SessionExercisePersistenceTest {
             old.execSQL("INSERT INTO set_records (id,sessionExerciseId,sequence,weightKg,reps,completedAt,requestId) VALUES (2,3,1,20,8,15,'old-completed')")
             old.version = 2
         }
-        var db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+        var db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
         try {
             val controller = SessionController(db)
             val migrated = controller.resumeActive()!!
             assertTrue(migrated.exercises.all { it.exercise.status == ExerciseStatus.PENDING })
             assertEquals(1, migrated.session.currentPosition)
-            assertEquals(42.5, migrated.exercises.first().sets.single().weightKg, 0.0)
+            assertEquals(42.5, migrated.exercises.first().sets.single().weightKg!!, 0.0)
             val historicalExercises = db.workoutSessionDao().exercises(2)
             val historicalSet = db.workoutSessionDao().record(2)
             val editor = SessionExerciseEditor(db)
@@ -62,13 +62,13 @@ class SessionExercisePersistenceTest {
             val added = editor.add(1, 8)
             val edited = controller.resumeActive()!!
             db.close()
-            db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
+            db = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_4_5).build()
             val restored = SessionController(db).resumeActive()!!
             assertEquals(edited, restored)
             assertEquals(listOf(2L, 1L, added), restored.exercises.map { it.exercise.id })
             assertEquals(ExerciseStatus.SKIPPED, restored.exercises.first().exercise.status)
             assertEquals(1, restored.session.currentPosition)
-            assertEquals(42.5, restored.exercises[1].sets.single().weightKg, 0.0)
+            assertEquals(42.5, restored.exercises[1].sets.single().weightKg!!, 0.0)
             assertEquals(historicalExercises, db.workoutSessionDao().exercises(2))
             assertEquals(historicalSet, db.workoutSessionDao().record(2))
             SessionController(db).finish(1)
